@@ -53,29 +53,31 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
   n = isNaN(n) ? 8 : Math.floor(Math.max(0,n));
   if (countMemo.hasOwnProperty(n)) return countMemo[n];
   var howMany;
+  var halfN = Math.ceil(n/2);     // The "bigger integer half" of `n`
+  var isOdd = cStart+cStart!==n;  // True means we need to add in "middle-row" solutions (solutions where the first queen is in middle row)
   var halfC = 0;                  // Increments on every solution where the first queen is in the left half (excluding middle for odd `n`)
   var midC = 0;                   // Inrements on every solution where the first queen is in the middle row (stays 0 for even 'n')
   var mx = n-1;                   // Maximum valid index of any full row or column.
-  var halfN = Math.ceil(n/2);     // The "bigger integer half" of `n`
-  var isOdd = halfN+halfN === n;  // True means we need to add in "middle-row" solutions (solutions where the first queen is in middle row)
   var queenA = []   // 1D array: queenA[(row of queen, aka queen ID number)] has (column index of that queen)
   var _c = [];      // "threat column array"            -- indexed on [ col ]
   var _p = [];      // "threat positive diagonal array" -- indexed on [ col + row ]
   var _n = [];      // "threat negative diagonal array" -- indexed on [ mx + col - row ]
   ////////////// BEGIN TRICKY CODE:
   // This section is tuned for execution speed and departs from some JS style conventions.
+  var cStart = Math.ceil(n/2);    // The "bigger integer half" of `n` is where the column starts on the first iteration of the first row
   var solveUpper = function(height) { // Explores all configurations arising from lower-board configuration, pushing solutions to ssA
     var r, c;                                 // "row of queen" "column of queen" - inner calls need separate indexes
     r = height; while (r--){                  // For each row of this upper part of the board, "bottom"-to-top
-      c = halfN;  while (c--){                // For each square of this row, right-to-left
+      c = cStart;  while (c--){               // For each square of this row, right-to-left
+        cStart = n;
         if (_c[c] || _p[c+r] || _n[mx+c-r])   // If (r,c) is a threatened square..
           continue;                           //    ..skip this square
         queenA[r] = c;                        // Place a new queen on this unthreatened square
         if (!r) {                             // If we're in the top row, this unthreatened square reveals a solution
-          if (isOdd && c===halfN) midN++;
-          else halfN++;
+          if (isOdd && c===halfN) midC++;
+          else halfC++;
           if (!sampleMemo.hasOwnProperty(n))
-            sampleMemo[n] = Array.concat(queenA);
+            sampleMemo[n] = queenA.concat();
           continue;                           // Simulate placing and then removing this new top-row queen
         }
         _c[c] = _p[c+r] = _n[mx+c-r] = true;  // Update the threats to accommodate the new queen
@@ -99,7 +101,7 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
-window.findNQueenSolutionCount = function(n) {
+window.findNQueensSolution = function(n) {
   trickyQueenSolutionCount(n); // Load the memo item by running the entire count traversal.
   solution = matrixFromShortHand(n, sampleMemo[n]);
 
