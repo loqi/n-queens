@@ -11,7 +11,8 @@
 // take a look at solversSpec.js to see what the tests are expecting
 
 matrixFromShortHand = function(n, shorthand) {
-  if (!shorthand) return [];
+  if (!shorthand) return shorthand = [];
+  // if (!shorthand) return [];
   var ret = [];
   var i, j;
   var row = [];
@@ -53,18 +54,18 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
   n = isNaN(n) ? 8 : Math.floor(Math.max(0,n));
   if (countMemo.hasOwnProperty(n)) return countMemo[n];
   var howMany;
-  var halfN = Math.ceil(n/2);     // The "bigger integer half" of `n`
-  var isOdd = cStart+cStart!==n;  // True means we need to add in "middle-row" solutions (solutions where the first queen is in middle row)
-  var halfC = 0;                  // Increments on every solution where the first queen is in the left half (excluding middle for odd `n`)
-  var midC = 0;                   // Inrements on every solution where the first queen is in the middle row (stays 0 for even 'n')
-  var mx = n-1;                   // Maximum valid index of any full row or column.
-  var queenA = []   // 1D array: queenA[(row of queen, aka queen ID number)] has (column index of that queen)
+  var bigHalfN = Math.ceil(n/2);      // Integer "big half" of `n`
+  var smallHalfN = Math.floor(n/2);   // Integer "small half" of `n`
+  var isEven = bigHalfN===smallHalfN;
+  var hitC = 0;     // Increments on every solution. Twice on off-center solutions
+  var mx = n-1;     // Maximum valid index of any full row or column.
+  var queenA = [];  // 1D array: queenA[(row of queen, aka queen ID number)] has (column index of that queen)
   var _c = [];      // "threat column array"            -- indexed on [ col ]
   var _p = [];      // "threat positive diagonal array" -- indexed on [ col + row ]
   var _n = [];      // "threat negative diagonal array" -- indexed on [ mx + col - row ]
-  ////////////// BEGIN TRICKY CODE:
+  // ############ BEGIN TRICKY CODE: ############
   // This section is tuned for execution speed and departs from some JS style conventions.
-  var cStart = Math.ceil(n/2);    // The "bigger integer half" of `n` is where the column starts on the first iteration of the first row
+  var cStart = bigHalfN;  // The starting column index of the first iteration of the first row
   var solveUpper = function(height) { // Explores all configurations arising from lower-board configuration, pushing solutions to ssA
     var r, c;                                 // "row of queen" "column of queen" - inner calls need separate indexes
     r = height; while (r--){                  // For each row of this upper part of the board, "bottom"-to-top
@@ -74,8 +75,8 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
           continue;                           //    ..skip this square
         queenA[r] = c;                        // Place a new queen on this unthreatened square
         if (!r) {                             // If we're in the top row, this unthreatened square reveals a solution
-          if (isOdd && c===halfN) midC++;
-          else halfC++;
+          hitC++;
+          if (isEven || queenA[mx]!==smallHalfN) hitC++;
           if (!sampleMemo.hasOwnProperty(n))
             sampleMemo[n] = queenA.concat();
           continue;                           // Simulate placing and then removing this new top-row queen
@@ -87,8 +88,8 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
       }   
       return;                                 // Return from solveUpper() recursion
     }                                         // Now, we've eplored all pathways arising from the lower-board configuration.
-  };  
-  ////////////// END TRICKY CODE.
+  };
+  // ############ END TRICKY CODE. ############
   // shorthandSolutionA has been loaded with one element per solution.
   // Each solution is an array of width `n` in this form:
   // solution[row] has `column`
@@ -97,13 +98,14 @@ var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-
   //     (0,1) (1,3) (2,0) (3,2) co-ordinates
   //     (0,2) (1,0) (2,3) (3,1) co-ordinates
   solveUpper(n);
-  return (countMemo[n] = halfC * 2 + midC);
+  return hitC;
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
   trickyQueenSolutionCount(n); // Load the memo item by running the entire count traversal.
   solution = matrixFromShortHand(n, sampleMemo[n]);
+
 
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
   return solution;
