@@ -48,73 +48,54 @@ window.countNRooksSolutions = fact;
 //   return solutionCount;
 // };
 
-var countMemo = { 0:1 , 1:1 , 2:0 , 3:0 }; // Number of possible solutions per `n`
-var sampleMemo = { 0:[] , 1:[0] , 2:null , 3:null }; // One discovered solution per `n`
-var trickyQueenSolutionCount = function(n) { // `howMany` solutions for an n-by-n board with n queens
+// Given a number `n` return the count of possible configurations of queens on an n-by-n
+// chessboard such that no queen threatens another queen.
+// Returns the absolute number of distinct board configurations.
+// Rotations and reflections count as distinct configurations.
+var recursiveBacktracikngBitwiseReflectingNQueensCount = function(n) {
   n = isNaN(n) ? 8 : Math.floor(Math.max(0,n));
-  if (countMemo.hasOwnProperty(n)) return countMemo[n];
-  var howMany;
-  var bigHalfN = Math.ceil(n/2);      // Integer "big half" of `n`
-  var smallHalfN = Math.floor(n/2);   // Integer "small half" of `n`
-  var isEven = bigHalfN===smallHalfN;
-  var hitC = 0;     // Increments on every solution. Twice on off-center solutions
-  var mx = n-1;     // Maximum valid index of any full row or column.
-  var queenA = [];  // 1D array: queenA[(row of queen, aka queen ID number)] has (column index of that queen)
-  var _c = [];      // "threat column array"            -- indexed on [ col ]
-  var _p = [];      // "threat positive diagonal array" -- indexed on [ col + row ]
-  var _n = [];      // "threat negative diagonal array" -- indexed on [ mx + col - row ]
-  // ############ BEGIN TRICKY CODE: ############
-  // This section is tuned for execution speed and departs from some JS style conventions.
-  var cStart = bigHalfN;  // The starting column index of the first iteration of the first row
-  var solveUpper = function(height) { // Explores all configurations arising from lower-board configuration, pushing solutions to ssA
-    var r, c;                                 // "row of queen" "column of queen" - inner calls need separate indexes
-    r = height; while (r--){                  // For each row of this upper part of the board, "bottom"-to-top
-      c = cStart;  while (c--){               // For each square of this row, right-to-left
-        cStart = n;
-        if (_c[c] || _p[c+r] || _n[mx+c-r])   // If (r,c) is a threatened square..
-          continue;                           //    ..skip this square
-        queenA[r] = c;                        // Place a new queen on this unthreatened square
-        if (!r) {                             // If we're in the top row, this unthreatened square reveals a solution
-          hitC++;
-          if (isEven || queenA[mx]!==smallHalfN) hitC++;
-          if (!sampleMemo.hasOwnProperty(n))
-            sampleMemo[n] = queenA.concat();
-          continue;                           // Simulate placing and then removing this new top-row queen
-        }
-        _c[c] = _p[c+r] = _n[mx+c-r] = true;  // Update the threats to accommodate the new queen
-        if (r) solveUpper(r);                 // Explore the upper board. There are threats but no queens up there.
-        m = z = p = c;                        // "Remove" the uppermost queen
-        _c[c] = _p[c+r] = _n[mx+c-r] = false; // Unthreaten all her axiseseses
-      }   
-      return;                                 // Return from solveUpper() recursion
-    }                                         // Now, we've eplored all pathways arising from the lower-board configuration.
+  var solutionCount = 0;
+  var fullRowMask = (1<<n) - 1;
+  var newcomer;
+  // recurse takes three bitfields which represent the threat pattern to the row under consideration
+  // in which a high bit indicates the square at that position is threatened from below in each of
+  // the three axies: / | \
+  var recurse = function(fromBelowLeft, fromBelow, fromBelowRight) {
+    var safePattern = ~(fromBelowRight | fromBelow | fromBelowLeft) & fullRowMask;
+    while (safePattern) {                       // While there's at least one safe square on this row
+      newcomer = -safePattern & safePattern;    // Try this rightmost safe square
+      safePattern = safePattern ^ newcomer;     // Mark the newcomer's bit as no longer safe
+      recurse( (fromBelowLeft|newcomer)>>1  , fromBelow|newcomer , (fromBelowRight|newcomer)<<1 );
+    }                                           // Now there are no more safe squares.
+    (fromBelow === fullRowMask) && solutionCount++; // Count solution if every e has been placed.
   };
-  // ############ END TRICKY CODE. ############
-  // shorthandSolutionA has been loaded with one element per solution.
-  // Each solution is an array of width `n` in this form:
-  // solution[row] has `column`
-  // For example, a 4x4 board will return a solution array something like:
-  // [ [1,3,0,2] , [2,0,3,1] ]   - meaning two solutions have been identified:
-  //     (0,1) (1,3) (2,0) (3,2) co-ordinates
-  //     (0,2) (1,0) (2,3) (3,1) co-ordinates
-  solveUpper(n);
-  return hitC;
+
+  // If n is tiny, just do it straight: 0:1 1:1 2:0 3:0 4:2 5:10
+  if (n < 6) { recurse(0, 0, 0);  return solutionCount; }
+  var bottomQueen = 1 << (n>>1);      // n5:00100 n6:001000 n7:0001000 n8:00010000
+  if (n & 1) {                        // If n is odd
+    var secondQueen = bottomQueen>>1; // place the second-from-bottom queen one column to the right of bottom queen
+    while (secondQueen >>= 1) {       // ..and then walk it to the right until exhausted.
+      recurse( bottomQueen>>2|(secondQueen>>1) , bottomQueen|secondQueen , (bottomQueen<<2)|(secondQueen<<1) );
+    } // Now solutionCount has the number of solutions with the bottom queen in the middle column..
+  }   // ..of its row, and the second-from-bottom queen anywhere in the right half of its row.
+  while(bottomQueen >>= 1) {          // Walk the bottom queen to the right until exhausted
+      recurse( bottomQueen>>1 , bottomQueen , bottomQueen<<1 );
+  }   // Now solutionCount has half the number of possible n-queens solutions.
+  return solutionCount*2;
 };
 
-// return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
-window.findNQueensSolution = function(n) {
-  trickyQueenSolutionCount(n); // Load the memo item by running the entire count traversal.
-  solution = matrixFromShortHand(n, sampleMemo[n]);
-
-
-  console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
-  return solution;
-};
+// var sampleMemo = { 0:[] , 1:[0] , 2:null , 3:null }; // One discovered solution per `n`
+// // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
+// window.findNQueensSolution = function(n) {
+//   recursiveThreatArrayQueenSolutionCount(n); // Load the memo item by running the entire count traversal.
+//   solution = matrixFromShortHand(n, sampleMemo[n]);
+//
+//
+//   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
+//   return solution;
+// };
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
-window.countNQueensSolutions = function(n) {
-  var solutionCount = trickyQueenSolutionCount(n);
 
-  console.log('Number of solutions for ' + n + ' queens:', solutionCount);
-  return solutionCount;
-};
+window.countNQueensSolutions = recursiveBacktracikngBitwiseReflectingNQueensCount;
