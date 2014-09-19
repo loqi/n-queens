@@ -16,16 +16,14 @@ matrixFromShortHand = function(n, shorthand) {
   var ret = [];
   var i, j;
   var row = [];
-  for (j = 0 ; j < n; j++)
-    row[j] = 0;
-  for (i = 0; i < n; i++)
-    ret.push(row.concat());
-  for (i = 0; i<shorthand.length; i++)
-    ret[i][shorthand[i]] = 1;
+  for (j = 0 ; j < n; j++) { row[j] = 0; }
+  for (i = 0 ; i < n; i++) { ret.push(row.concat()); }
+  for (i = 0 ; i < shorthand.length; i++) { ret[i][shorthand[i]] = 1; }
   return ret;
 };
 
-// return a matrix (an array of arrays) representing a single nxn chessboard, with n rooks placed such that none of them can attack each other
+// return a matrix (an array of arrays) representing a single nxn chessboard, with n rooks
+//   placed such that no rook threatens another rook.
 window.findNRooksSolution = function(n) {
   shorthand = [];
   for (var i = 0; i < n; i++) { shorthand[i] = i; } // Describe a diagonal row of chess pieces
@@ -36,9 +34,9 @@ window.findNRooksSolution = function(n) {
 var intFact = function(n) {
   if (isNaN(n) || n < 0) return undefined;
   n = Math.floor(n);
-  var r = 1;
-  while (n) { r *= n--; }
-  return r;
+  var ret = 1;
+  while (n) { ret *= n--; }
+  return ret;
 };
 
 // return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
