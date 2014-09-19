@@ -51,7 +51,7 @@ window.countNRooksSolutions = intFact;
 // chessboard such that no queen threatens another queen.
 // Returns the absolute number of distinct board configurations.
 // Rotations and reflections count as distinct configurations.
-var recursiveBacktracikngBitwiseReflectingNQueensCount = function(n) {
+var recursiveBacktrackingBitwiseReflectingNQueensCount = function(n) {
   n = isNaN(n) ? 8 : Math.floor(Math.max(0,n));
   var solutionCount = 0;
   var fullRowMask = (1<<n) - 1;
@@ -97,4 +97,4 @@ var recursiveBacktracikngBitwiseReflectingNQueensCount = function(n) {
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 
-window.countNQueensSolutions = recursiveBacktracikngBitwiseReflectingNQueensCount;
+window.countNQueensSolutions = recursiveBacktrackingBitwiseReflectingNQueensCount;
