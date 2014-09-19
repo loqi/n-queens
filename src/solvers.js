@@ -33,15 +33,16 @@ window.findNRooksSolution = function(n) {
 };
 
 // Fast factorial function for positive integers.
-var fact = function(n) {
+var intFact = function(n) {
   if (isNaN(n) || n < 0) return undefined;
+  n = Math.floor(n);
   var r = 1;
-  while (n > 1) { r *= n--; }
+  while (n) { r *= n--; }
   return r;
 };
 
 // return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
-window.countNRooksSolutions = fact;
+window.countNRooksSolutions = intFact;
 // window.countNRooksSolutions = function(n) {
 //   var solutionCount = fact(n);
 //   console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
@@ -64,7 +65,7 @@ var recursiveBacktracikngBitwiseReflectingNQueensCount = function(n) {
     var safePattern = ~(fromBelowRight | fromBelow | fromBelowLeft) & fullRowMask;
     while (safePattern) {                       // While there's at least one safe square on this row
       newcomer = -safePattern & safePattern;    // Try this rightmost safe square
-      safePattern = safePattern ^ newcomer;     // Mark the newcomer's bit as no longer safe
+      safePattern = safePattern ^ newcomer;     // Mark the newcomer square as no longer safe
       recurse( (fromBelowLeft|newcomer)>>1  , fromBelow|newcomer , (fromBelowRight|newcomer)<<1 );
     }                                           // Now there are no more safe squares.
     (fromBelow === fullRowMask) && solutionCount++; // Count solution if every e has been placed.
